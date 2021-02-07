@@ -186,10 +186,6 @@ namespace Chessticle
 
             m_ChessboardUI.RefreshClaimDrawButton();
             m_LastConfirmedMoveResult = m_ChessboardUI.LastMoveResult;
-
-            // THIS CODE MAKES IT SO YOU DONT PAINT BY MISTAKE AND ADD SCORE, THIS MAKES IT DO IT ON THE SERVER
-            // Debug.Log("Move was made");
-            // m_ChessboardUI.tilesPainted = true;
         }
 
         [PunRPC]

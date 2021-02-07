@@ -67,6 +67,8 @@ namespace Chessticle
         public Text EnemyPaintText;
         public Sprite LocalTexture;
         public Sprite EnemyTexture;
+        public Color32 LocalPaintColor;
+        public Color32 EnemyPaintColor; // TODO: Add dropdown at the start to change color (r,g,b)
         public Text MovesAmount;
         public GameObject[] PaintTiles;
         int rCount;
@@ -203,7 +205,60 @@ namespace Chessticle
             StartCoroutine(DoAnimateOpponentMove(startIdx, targetIdx, promotionPiece));
         }
 
-        // Marc
+        // PAINT THE TILES (Used in DoFinishLocalMove and DoAnimateOpponentMove universally)
+        public void PaintTheTiles(int startRank, int startFile, int targetRank, int targetFile, Action coloringFunc)
+        {
+            if (targetRank < startRank)
+            {
+                for (int r = targetRank; r <= startRank; r++)
+                {
+                    if (targetFile < startFile)
+                    {
+                        for (int f = targetFile; f <= startFile; f++)
+                        {
+                            fCount = f;
+                            rCount = r;
+                            coloringFunc(); // Can switch to LocalTilePainter() or EnemyTilePainter() because of the parameter
+                        }
+                    }
+                    else
+                    {
+                        for (int f = targetFile; f >= startFile; f--)
+                        {
+                            fCount = f;
+                            rCount = r;
+                            coloringFunc();
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int r = targetRank; r >= startRank; r--)
+                {
+                    if (targetFile < startFile)
+                    {
+                        for (int f = targetFile; f <= startFile; f++)
+                        {
+                            fCount = f;
+                            rCount = r;
+                            coloringFunc();
+                        }
+                    }
+                    else
+                    {
+                        for (int f = targetFile; f >= startFile; f--)
+                        {
+                            fCount = f;
+                            rCount = r;
+                            coloringFunc();
+                        }
+                    }
+                }
+            }
+        }
+
+        
         public void LocalTilePainter()
         {
             var ranksMoved = rCount;
@@ -216,7 +271,7 @@ namespace Chessticle
             {
                 if (PaintTiles[i].name == Chessboard.Index0X88ToCoords(paintTiles).ToString())
                 {
-                    PaintTiles[i].GetComponent<SpriteRenderer>().color = new Color32(0, 155, 255, 130); // BLUE (White and Black share, it's "Your" colour)
+                    PaintTiles[i].GetComponent<SpriteRenderer>().color = LocalPaintColor; // BLUE: 0, 155, 255, 130 (White and Black share; blue is always "Your" colour)
                     PaintTiles[i].GetComponent<SpriteRenderer>().sprite = LocalTexture;
                     PaintTiles[i].GetComponent<SetPaint>().isLocalPaint = true;
 
@@ -226,7 +281,7 @@ namespace Chessticle
                         && PaintTiles[i].GetComponent<SetPaint>().isEnemyPaint == false)
                     {
                         Chessboard.localScore += 1;
-                        LocalPaintText.text = Chessboard.localScore.ToString(); // For Precentage: //LocalPaintText.text = (Chessboard.localScore/64*100).ToString("F1") + "%";
+                        LocalPaintText.text = Chessboard.localScore.ToString(); // For Precentage: LocalPaintText.text = (Chessboard.localScore/64*100).ToString("F1") + "%";
                         PaintTiles[i].GetComponent<SetPaint>().isNoPaint = false;
                     }
                     // CONDITION 02: LOCAL STEALS PLAYER
@@ -249,6 +304,7 @@ namespace Chessticle
         {
             var startIdx = Chessboard.CoordsToIndex0X88(startRank, startFile);
             var targetIdx = Chessboard.CoordsToIndex0X88(targetRank, targetFile);
+            var shouldPaint = false;
 
 
             var promotionPiece = Piece.None;
@@ -263,81 +319,37 @@ namespace Chessticle
                 HidePromotionUI();
             }
 
+            // IF: TryMove -> Should Paint = True. Therefore if (ShoulPaint) -> PaintTheTiles (Local/EnemyTilePainter())
             if (TryMove(startIdx, targetIdx, promotionPiece)) {
-                LocalPlayerMoved?.Invoke(startIdx, targetIdx, promotionPiece);
+                // Debug.Log($"Piece moved successfully{LocalPlayerMoved}");
+                shouldPaint = true;
+                LocalPlayerMoved?.Invoke(startIdx, targetIdx, promotionPiece); 
             }
 
             Refresh();
-
+            
             // Count moves
             MovesAmount.text = Chessboard.numOfMoves.ToString() + " /30";
-            // CALCULATE RANKS
-
-            if (targetRank < startRank)
-            {
-                for (int r = targetRank; r <= startRank; r++)
-                {
-                    if (targetFile < startFile)
-                    {
-                        for (int f = targetFile; f <= startFile; f++)
-                        {
-                            fCount = f;
-                            rCount = r;
-                            LocalTilePainter();
-                        }
-                    }
-                    else
-                    {
-                        for (int f = targetFile; f >= startFile; f--)
-                        {
-                            fCount = f;
-                            rCount = r;
-                            LocalTilePainter();
-                        }
-                    }
-                }
+            if (shouldPaint) {
+                // Call PaintTheTiles(parameters, Local() function) --> This part fixes the bug of painting with shouldPaint because it's done only after TryMove is done.
+                PaintTheTiles(startRank, startFile, targetRank, targetFile, LocalTilePainter);
             }
-            else
-            {
-                for (int r = targetRank; r >= startRank; r--)
-                {
-                    if (targetFile < startFile)
-                    {
-                        for (int f = targetFile; f <= startFile; f++)
-                        {
-                            fCount = f;
-                            rCount = r;
-                            LocalTilePainter();
-                        }
-                    }
-                    else
-                    {
-                        for (int f = targetFile; f >= startFile; f--)
-                        {
-                            fCount = f;
-                            rCount = r;
-                            LocalTilePainter();
-                        }
-                    }
-                }
-            }
+            
         }
 
         public void EnemyTilePainter()
         {
             var ranksMoved = rCount;
             var filesMoved = fCount;
-
             var paintTiles = Chessboard.CoordsToIndex0X88(ranksMoved, filesMoved);
 
-            
             for (int i = 0; i < PaintTiles.Length; i++)
             {
                 if (PaintTiles[i].name == Chessboard.Index0X88ToCoords(paintTiles).ToString())
                 {
-                    PaintTiles[i].GetComponent<SpriteRenderer>().color = new Color32(255, 155, 0, 130); // Orange
-                    PaintTiles[i].GetComponent<SpriteRenderer>().sprite = EnemyTexture;
-                    PaintTiles[i].GetComponent<SetPaint>().isEnemyPaint = true;
+                    PaintTiles[i].GetComponent<SpriteRenderer>().color = EnemyPaintColor; // Orange color is: 255, 155, 0, 130
+                    PaintTiles[i].GetComponent<SpriteRenderer>().sprite = EnemyTexture; // Colorblind textures
+                    PaintTiles[i].GetComponent<SetPaint>().isEnemyPaint = true; // Set to enemy paint. Below figures when it can score depending if it's local/empty
 
                     // CONDITION 01: ENEMY STEALS BLANK
                     if (PaintTiles[i].GetComponent<SetPaint>().isEnemyPaint == true 
@@ -347,8 +359,6 @@ namespace Chessticle
                         Chessboard.enemyScore += 1;
                         EnemyPaintText.text = Chessboard.enemyScore.ToString();
                         PaintTiles[i].GetComponent<SetPaint>().isNoPaint = false;
-
-                        
                     }
                     // CONDITION 02: ENEMY STEALS PLAYER
                     if (PaintTiles[i].GetComponent<SetPaint>().isLocalPaint == true 
@@ -360,11 +370,9 @@ namespace Chessticle
                         Chessboard.enemyScore += 1;
                         LocalPaintText.text = Chessboard.localScore.ToString();
                         EnemyPaintText.text = Chessboard.enemyScore.ToString();
-
                     }
                 }
             }
-
         }
 
         // ENEMY:
@@ -384,58 +392,10 @@ namespace Chessticle
             var (startRank, startFile) = Chessboard.Index0X88ToCoords(startIdx);
             var (targetRank, targetFile) = Chessboard.Index0X88ToCoords(targetIdx);
 
-            // START HERE - MARC P
+            // Move counter + 1
             MovesAmount.text = Chessboard.numOfMoves.ToString() + " /30";
-
-            if (targetRank < startRank)
-            {
-                for (int r = targetRank; r <= startRank; r++)
-                {
-                    if (targetFile < startFile)
-                    {
-                        for (int f = targetFile; f <= startFile; f++)
-                        {
-                            fCount = f;
-                            rCount = r;
-                            EnemyTilePainter();
-                        }
-                    }
-                    else
-                    {
-                        for (int f = targetFile; f >= startFile; f--)
-                        {
-                            fCount = f;
-                            rCount = r;
-                            EnemyTilePainter();
-                        }
-                    }
-                }
-            }
-            else
-            {
-                for (int r = targetRank; r >= startRank; r--)
-                {
-
-                    if (targetFile < startFile)
-                    {
-                        for (int f = targetFile; f <= startFile; f++)
-                        {
-                            fCount = f;
-                            rCount = r;
-                            EnemyTilePainter();
-                        }
-                    }
-                    else
-                    {
-                        for (int f = targetFile; f >= startFile; f--)
-                        {
-                            fCount = f;
-                            rCount = r;
-                            EnemyTilePainter();
-                        }
-                    }
-                }
-            }
+            // Call PaintTheTiles(parameters, Enemy() function). We don't need an if statement for TryMoves because that's only YOU trying to move that we care about not the enemy trying
+            PaintTheTiles(startRank, startFile, targetRank, targetFile, EnemyTilePainter);
 
             Vector2 startPos;
             Vector2 targetPos;
