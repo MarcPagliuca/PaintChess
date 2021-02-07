@@ -61,19 +61,16 @@ namespace Chessticle
         public event Action ClaimDrawRequested;
         public event Action OfferDrawRequested;
         public event LocalPlayerMovedCallback LocalPlayerMoved;
-        // Marc's Filthy Variables:
+
         // Added in paint tiles array
         public Text LocalPaintText;
         public Text EnemyPaintText;
+        public Sprite LocalTexture;
+        public Sprite EnemyTexture;
         public Text MovesAmount;
         public GameObject[] PaintTiles;
         int rCount;
         int fCount;
-        // public bool tilesPainted = false;
-        public enum PaintType { PaintLocal, PaintEnemy }
-        public PaintType tilePaintState;
-
-
 
         void Start()
         {
@@ -219,8 +216,8 @@ namespace Chessticle
             {
                 if (PaintTiles[i].name == Chessboard.Index0X88ToCoords(paintTiles).ToString())
                 {
-                    PaintTiles[i].GetComponent<SpriteRenderer>().color = new Color32(0, 155, 255, 90); // BLUE (White and Black share, it's "Your" colour)
-
+                    PaintTiles[i].GetComponent<SpriteRenderer>().color = new Color32(0, 155, 255, 130); // BLUE (White and Black share, it's "Your" colour)
+                    PaintTiles[i].GetComponent<SpriteRenderer>().sprite = LocalTexture;
                     PaintTiles[i].GetComponent<SetPaint>().isLocalPaint = true;
 
                     // CONDITION 01: LOCAL STEALS BLANK
@@ -338,7 +335,8 @@ namespace Chessticle
             {
                 if (PaintTiles[i].name == Chessboard.Index0X88ToCoords(paintTiles).ToString())
                 {
-                    PaintTiles[i].GetComponent<SpriteRenderer>().color = new Color32(255, 155, 0, 90); // Orange
+                    PaintTiles[i].GetComponent<SpriteRenderer>().color = new Color32(255, 155, 0, 130); // Orange
+                    PaintTiles[i].GetComponent<SpriteRenderer>().sprite = EnemyTexture;
                     PaintTiles[i].GetComponent<SetPaint>().isEnemyPaint = true;
 
                     // CONDITION 01: ENEMY STEALS BLANK
