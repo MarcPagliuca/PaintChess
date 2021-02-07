@@ -8,7 +8,7 @@ Knights paint 6 tiles, Bishops and Queens are very powerful and can paint an ent
 
 From testing, good strategies involve playing aggresively at the end game to sneak in and score the most paint, or distract the opponent with beutiful colours and forget they're playing normal chess and checkmating them. That also seems to work lol. 
 
-NOTE: There is a bug where if you drag and let go of your piece it paints the tiles accidentally (only to your end if you do it, it doesn't show on the opponent's side) so please be careful when accurately measuring the score
+NOTE: There is a bug where if you drag and let go of your piece (in the incorrect spots) it will paint the tiles by accident (only to your end if you do it, it doesn't show on the opponent's side) so please be careful when accurately measuring the score
 
 This uses MIT Licensed code from Radek Lžičař (rlzicar on Github) to do most of the groundwork including multiplayer (Photon Unity Networking 2 (PUN 2)) and special rules for chess. Without it I wouldn't be able to do this, so thanks if you are reading this!
 
